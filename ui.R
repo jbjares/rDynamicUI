@@ -13,8 +13,10 @@ shinyUI(fluidPage(
     column(3, wellPanel(
       uiOutput("ui"),
       textOutput("fileUpload")
-    ))
-    
-
+      
+    )),
+    mainPanel(
+      htmlOutput("getHeaderOutput")
+    )
   )
 ))

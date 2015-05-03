@@ -2,9 +2,11 @@ source("mongo.R")
 
 df <- NULL
 
-read <- function(){
-  df <<- read.csv("C:\\Users\\JOAOBO~1\\AppData\\Local\\Temp\\RtmpCOTxs7/db9c4b7b08e115909378ad88/0",header=TRUE)
-}
+
+
+# read <- function(){
+#   df <<- read.csv("C:\\Users\\JOAOBO~1\\AppData\\Local\\Temp\\RtmpCOTxs7/db9c4b7b08e115909378ad88/0",header=TRUE)
+# }
 
 
 

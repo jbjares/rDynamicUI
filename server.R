@@ -2,14 +2,26 @@
 library(shiny)
 source("global.R")
 
+
 shinyServer(function(input, output, session) {
   
+  
     getQueryArgumentValues <- reactive({
-      query <- parseQueryString(session$clientData$url_search)
-      return(query)
+      if(!is.null(session) && length(session)>0 && !is.null(session$clientData) 
+         && length(session$clientData)>0 && !is.null(session$clientData$url_search) &&
+           length(session$clientData$url_search)>0){
+            query <- parseQueryString(session$clientData$url_search)
+            return(query)
+              
+      }else{
+        return(NULL)
+      }
     })
     
     output$ui <- renderUI({
+      if(is.null(getQueryArgumentValues())){
+        return
+      }
       switch(getQueryArgumentValues()[1]$cmd,
              "slider" = sliderInput("dynamic", "Dynamic",
                                     min = 1, max = 20, value = 10),
@@ -65,6 +77,9 @@ shinyServer(function(input, output, session) {
       tryCatch({
         df <<- read.csv((input$fileUploadCSV)$datapath,sep=",",header = TRUE)
         unlink((input$fileUploadCSV)$datapath)
+        hash <- getQueryArgumentValues()[2]
+        colnamesJason <- toJSON(colnames(df)) 
+        mongoHelper$cacheDataFrameHeader(colnames(df),hash)
       }, interrupt = function(ex) {
         cat("An interrupt was detected.\n");
         print(ex);
@@ -77,12 +92,33 @@ shinyServer(function(input, output, session) {
     })
     
     output$fileUpload <- renderText({
-      invisible(ntext())
+      ntext()
       if(length(df)>0){
         print("File uploaded successfully.")
       }else{
         print("unexpected exception during upload try again.")
       }
+    })
+    
+    output$getHeaderOutput <- renderUI({
+      
+      if(is.null(getQueryArgumentValues())){
+        return
+      }
+      if(getQueryArgumentValues()[1]$cmd=="getHeaderValues"){
+        #toJSON(df) 
+        exceptionText <- paste0("{",shQuote("exception"),":",shQuote("File not uploaded yet."), "}")
+
+          if(is.null(df) || length(df)==0){
+            HTML(cat(exceptionText))
+            
+          }else{
+            HTML(toJSON(colnames(df)))
+          }
+        }else{
+        print("")
+      }
+
     })
     
   })

@@ -1,4 +1,5 @@
 dataSourceNS <- "multivision_jbjares.DatasourceTO"
+headerCacheNS <- "multivision_jbjares.HeaderCacheTO"
 hostDesenv <- "ds061371.mongolab.com:61371"
 usernameDesenv <-"jbjares"
 passwordDesenv <- "multivision"
@@ -13,6 +14,29 @@ mongoHelper <- list(
   connect = function(){
     mongo <- mongo.create(host = hostDesenv, username = usernameDesenv, password = passwordDesenv, db = dbDesenv, timeout = 0L)
     return(mongo)
+  },
+  cacheDataFrameHeader = function(colnames,hash){
+    hashchar <- as.character(hash)
+    buf <- mongo.bson.buffer.create()
+    print(class(hash))
+    print(class(hashchar))
+    mongo.bson.buffer.append.string(buf, "hash",hashchar)
+    coList <- as.list(colnames)
+    mongo.bson.buffer.append.list(buf, "value",coList)
+    b <- mongo.bson.from.buffer(buf)
+    mongo.insert(mongo,headerCacheNS, b)
+    return(T)
+  },
+  cacheDataFrame = function(dataframe,user="user1"){
+    buffer <- mongo.bson.from.df(dataframe)
+    mongo.insert(mongo, eval(parse(text=paste0(cacheNS,user))) , buffer)
+    return(T)
+  },
+  loadCachedDataFrame = function(user="user1"){
+    #mongo.insert(mongo, eval(parse(text=paste0(cacheNS,user))), buffer)
+    cursor <- mongo.find.all(mongo, eval(parse(text=paste0(cacheNS,user))), query = mongo.bson.empty())
+    res <- mongo.cursor.to.data.frame(cursor)
+    return(res)
   },
   
   storeUploadedFile = function(){
@@ -47,9 +71,6 @@ mongoHelper <- list(
       mongo.insert(mongo, dataSourceNS, bson)
     }
 
-    #works, but not as expected
-#     buffer <- mongo.bson.from.df(df)
-#     mongo.insert(mongo, dataSourceNS, buffer)
     
   }
   
